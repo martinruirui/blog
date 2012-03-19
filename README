@@ -3,3 +3,5 @@ requirements.txt 里面是必须的第三方包
 1. 在项目根目录执行 make runtime-dep
 2. 在mysql创建blog database
 3. 运行make init-db 初始化数据库
+
+4. 启动项目 make run

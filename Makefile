@@ -5,3 +5,6 @@ init-db:
 runtime-dep:
 	sudo easy_install pip
 	sudo pip install -r requirements.txt
+
+run:
+	python app.py
