@@ -1,0 +1,21 @@
+#  tornado server profile's config
+server:
+    port: 8080
+
+# blog config
+blog_title: "blog"
+template_path:  "templates"
+static_path:    "static"
+xsrf:   False
+cookie_secret:  "11oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo="
+login_url:  "/auth/login"  
+autoescape: None 
+
+# database config
+db:
+    port:   3306
+    host:   "localhost"
+    database:   "blog"
+    user:   "root"
+    password:   "sasa"
+    pool_recycle: 3600

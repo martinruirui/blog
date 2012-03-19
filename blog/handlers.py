@@ -27,51 +27,9 @@ import tornado.web
 import unicodedata
 
 from pdb import set_trace as st
-
-import yaml
-
-config_file = os.path.join(os.getcwd(), 'config.yaml')
-raw_config = yaml.load(open(config_file))
-
-CONFIG = raw_config['env']['prod']['blog']
-
 from tornado.options import define, options
 
-define("port", default=CONFIG['port'], help="run on the given port", type=int)
-define("mysql_host", default=CONFIG['db']['host'], help="blog database host")
-define("mysql_database", default=CONFIG['db']['name'], help="blog database name")
-define("mysql_user", default=CONFIG['db']['user'], help="blog database user")
-define("mysql_password", default=CONFIG['db']['pwd'], help="blog database password")
-
-
-class Application(tornado.web.Application):
-    def __init__(self):
-        handlers = [
-            (r"/", HomeHandler),
-            (r"/archive", ArchiveHandler),
-            (r"/feed", FeedHandler),
-            (r"/entry/([^/]+)", EntryHandler),
-            (r"/compose", ComposeHandler),
-            (r"/auth/login", AuthLoginHandler),
-            (r"/auth/logout", AuthLogoutHandler),
-        ]
-        settings = dict(
-            blog_title=u"martin's home",
-            template_path=os.path.join(os.path.dirname(__file__), "templates"),
-            static_path=os.path.join(os.path.dirname(__file__), "static"),
-            ui_modules={"Entry": EntryModule},
-            xsrf_cookies=True,
-            cookie_secret="11oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
-            login_url="/auth/login",
-            autoescape=None,
-        )
-        tornado.web.Application.__init__(self, handlers, **settings)
-
-        # Have one global connection to the blog DB across all handlers
-        self.db = tornado.database.Connection(
-            host=options.mysql_host, database=options.mysql_database,
-            user=options.mysql_user, password=options.mysql_password)
-
+from models import Article, db
 
 class BaseHandler(tornado.web.RequestHandler):
     @property
@@ -93,6 +51,42 @@ class HomeHandler(BaseHandler):
             return
         self.render("home.html", entries=entries)
 
+class ArticleHandler(BaseHandler):
+    def get(self, id):
+        article = Article.query.filter_by(id=id).first()
+        if not article:
+            raise tornado.web.HTTPError(404, 'could not find article')
+        return article.title
+
+    def post(self):
+        til = self.get_argument('title', None)
+        content = self.get_argument('content', None)
+        uid = self.get_argument('uid', None)
+        tag = self.get_argument('tag', '')
+        cat = self.get_argument('cat_id', 0)
+
+        if not til or not content or not uid:
+            raise tornado.web.HTTPError(400, 'parameters invalid')
+        try:
+            article = Article()
+            article.title=til
+            article.content = content,
+            article.user = uid,
+            article.tag = tag,
+            article.category = cat,
+            db.session.add(article)
+            db.session.commit()
+        except Exception:
+            raise tornado.web.HTTPError(500, 'add article error')
+        return 'ok'
+
+class CategoryHandler(BaseHandler):
+    def get(self):
+        pass
+
+class CommentHandler(BaseHandler):
+    def get(self, article_id):
+        pass
 
 class EntryHandler(BaseHandler):
     def get(self, slug):
@@ -194,13 +188,3 @@ class EntryModule(tornado.web.UIModule):
     def render(self, entry):
         return self.render_string("modules/entry.html", entry=entry)
 
-
-def main():
-    tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(options.port)
-    tornado.ioloop.IOLoop.instance().start()
-
-
-if __name__ == "__main__":
-    main()
