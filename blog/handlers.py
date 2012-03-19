@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#encoding = utf-8
 #
 # Copyright 2009 Facebook
 #
@@ -29,7 +30,7 @@ import unicodedata
 from pdb import set_trace as st
 from tornado.options import define, options
 
-from models import Article, db
+from models import Article, User, db
 
 class BaseHandler(tornado.web.RequestHandler):
     @property
@@ -56,7 +57,7 @@ class ArticleHandler(BaseHandler):
         article = Article.query.filter_by(id=id).first()
         if not article:
             raise tornado.web.HTTPError(404, 'could not find article')
-        return article.title
+        self.write(article.title)
 
     def post(self):
         til = self.get_argument('title', None)
@@ -69,16 +70,17 @@ class ArticleHandler(BaseHandler):
             raise tornado.web.HTTPError(400, 'parameters invalid')
         try:
             article = Article()
-            article.title=til
-            article.content = content,
-            article.user = uid,
-            article.tag = tag,
-            article.category = cat,
+            article.title = til
+            article.content = content
+            article.user_id = int(uid)
+            article.tag = tag
+            article.cat_id = int(cat)
             db.session.add(article)
+            db.session.flush()
             db.session.commit()
-        except Exception:
+        except Exception as e:
             raise tornado.web.HTTPError(500, 'add article error')
-        return 'ok'
+        self.write('ok')
 
 class CategoryHandler(BaseHandler):
     def get(self):
