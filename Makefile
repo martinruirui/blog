@@ -5,6 +5,7 @@ DB_USER = root
 DB_PASSWD = sasa
 DB = blog
 mysql_dumps = mysqldump -u$(DB_USER) -p$(DB_PASSWD) $(DB)
+mysql = mysql -u$(DB_USER) -p$(DB_PASSWD) $(DB)
 
 runtime-dep:
 	sudo easy_install pip
@@ -15,7 +16,7 @@ run:
 	@python app.py
 
 init-db:
-	${mysql_dumps} < mysql/blog.sql
+	${mysql} < mysql/blog.sql
 
 dumps-table:
 	${mysql_dumps} --no-data > mysql/blog.sql
