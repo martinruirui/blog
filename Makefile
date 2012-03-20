@@ -11,7 +11,8 @@ runtime-dep:
 	sudo pip install -r requirements.txt
 
 run:
-	python app.py
+	@echo "run server at http://localhost:8080\nyou could use curl tools test server\nexample:\n\tcurl 'http://localhost:8080/article/1'"
+	@python app.py
 
 init-db:
 	${mysql_dumps} < mysql/blog.sql
