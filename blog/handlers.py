@@ -82,6 +82,28 @@ class ArticleHandler(BaseHandler):
             raise tornado.web.HTTPError(500, 'add article error')
         self.write('ok')
 
+    def put(self):
+        rbody = self.request.body.split('&')
+        rbody = dict([(p.split('=')[0], p.split('=')[1]) for p in rbody])
+        tid = rbody['tid']
+        article = Article.query.filter_by(id=tid).first()
+        if not article:
+            article = Article()
+        
+        title = rbody['title']
+        content = rbody['content']
+        tag = rbody['tag']
+        try:
+            article.title = title
+            article.content = content
+            article.tag = tag
+            db.session.add(article)
+            db.session.flush()
+            db.session.commit()
+        except Exception as e:
+            raise tornado.web.HTTPError(500, 'edit article error')
+        self.write('ok')
+
 class CategoryHandler(BaseHandler):
     def get(self):
         pass
