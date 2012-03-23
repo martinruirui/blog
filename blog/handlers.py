@@ -88,8 +88,7 @@ class ArticleHandler(BaseHandler):
         tid = rbody['tid']
         article = Article.query.filter_by(id=tid).first()
         if not article:
-            article = Article()
-        
+            article = Article() 
         title = rbody['title']
         content = rbody['content']
         tag = rbody['tag']
